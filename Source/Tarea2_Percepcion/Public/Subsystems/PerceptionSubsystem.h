@@ -23,8 +23,8 @@ public:
 	UFUNCTION(BlueprintCallable)
 	void NotifyActorDetected(AActor* DetectedActor);
 
-	UFUNCTION(BlueprintPure)
-	void GetRegisteredComponents(TArray<UPerceptionComponent*> &RegisteredComponents);
+	// UFUNCTION(BlueprintPure)
+	// void GetRegisteredComponents(TArray<UPerceptionComponent*> &RegisteredComponents);
 
 protected:
 	// Lista de componentes registrados

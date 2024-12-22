@@ -18,6 +18,6 @@ void UPerceptionSubsystem::NotifyActorDetected(AActor* DetectedActor)
 	OnGlobalActorDetected.Broadcast(DetectedActor);
 }
 
-void UPerceptionSubsystem::GetRegisteredComponents(TArray<UPerceptionComponent*>& RegisteredComponents)
-{
-}
+// void UPerceptionSubsystem::GetRegisteredComponents(TArray<UPerceptionComponent*>& RegisteredComponents)
+// {
+// }
