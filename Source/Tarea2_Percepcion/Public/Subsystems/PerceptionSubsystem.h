@@ -4,8 +4,10 @@
 #include "Subsystems/WorldSubsystem.h"
 #include "PerceptionSubsystem.generated.h"
 
+struct FPerceptionInfo_Struct;
 class UPerceptionComponent;
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnActorDetected, AActor*, DetectedActor);
+
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnActorDetectedPerception, AActor*, Detector, AActor*, Detected);
 
 UCLASS()
 class TAREA2_PERCEPCION_API UPerceptionSubsystem : public UWorldSubsystem
@@ -14,23 +16,30 @@ class TAREA2_PERCEPCION_API UPerceptionSubsystem : public UWorldSubsystem
 
 public:
 	
-	UFUNCTION(BlueprintCallable)
-	void RegisterPerceptionComponent(UPerceptionComponent* Component);
-
-	UFUNCTION(BlueprintCallable)
-	void UnregisterPerceptionComponent(UPerceptionComponent* Component);
+	// Inicialización del subsistema
+	virtual void Initialize(FSubsystemCollectionBase& Collection) override;
+	virtual void Deinitialize() override;
 	
-	UFUNCTION(BlueprintCallable)
-	void NotifyActorDetected(AActor* DetectedActor);
+	// Configurar los parámetros de percepción
+	UFUNCTION(BlueprintCallable, Category = "Perception Subsystem")
+	void InitPerceptionInfo(AActor* InActor, FPerceptionInfo_Struct InPerceptionInfo);
 
-	// UFUNCTION(BlueprintPure)
-	// void GetRegisteredComponents(TArray<UPerceptionComponent*> &RegisteredComponents);
+	// Activar/Desactivar percepción
+	UFUNCTION(BlueprintCallable, Category = "Perception Subsystem")
+	void SetPerceptionEnabled(TArray<AActor*> ActorsList, const bool bEnable);
 
-protected:
-	// Lista de componentes registrados
-	TArray<UPerceptionComponent*> RegisteredComponents;
+	UPROPERTY(BlueprintAssignable, Category = "Perception Subsystem")
+	FOnActorDetectedPerception OnActorDetectedPerception;
 
-	// Delegado global para detecciones
-	UPROPERTY(BlueprintAssignable, Category = "Perception")
-	FOnActorDetected OnGlobalActorDetected;
+private:
+	
+	UPROPERTY()
+	TArray<AActor*> RegisteredActors;
+
+	// Registrar y desregistrar componentes
+	void RegisterActor(AActor* InActor);
+	void UnregisterActor(AActor* InActor);
+
+	// Callback de inicialización del mundo
+	void OnWorldInitialized(UWorld* World, const UWorld::InitializationValues IVS);
 };

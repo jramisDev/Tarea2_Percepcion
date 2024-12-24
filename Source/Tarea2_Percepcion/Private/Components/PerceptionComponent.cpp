@@ -18,17 +18,16 @@ void UPerceptionComponent::BeginPlay()
 
 void UPerceptionComponent::PerformDetection()
 {
-	if(!PerceptionActive)
+	if(!bPerceptionActive)
 	{
-		UE_LOG(LogPerceptionSystem, Error, TEXT("Perception System is DISABLED"));
+		UE_LOG(LogPerceptionSystem, Error, TEXT("UPerceptionComponent::PerformDetection() - Perception System is DISABLED"));
 		return;
 	}
 
-	UE_LOG(LogPerceptionSystem, Display, TEXT("Perception Component Detection"));
+	//UE_LOG(LogPerceptionSystem, Display, TEXT("UPerceptionComponent::PerformDetection() - Perception Component Detection"));
 	
 	// Obtener actores en el radio de detección
 	TArray<AActor*> OverlappingActors;
-	FVector OwnerLocation = GetOwner()->GetActorLocation();
 
 	// Esfera de detección
 	TArray<TEnumAsByte<EObjectTypeQuery>> ObjectTypes;
@@ -37,7 +36,7 @@ void UPerceptionComponent::PerformDetection()
 	
 	UKismetSystemLibrary::SphereOverlapActors(
 		this,
-		OwnerLocation,
+		GetOwner()->GetActorLocation(),
 		PerceptionInfo.DistanceDetection,
 		ObjectTypes,
 		nullptr,
@@ -45,12 +44,14 @@ void UPerceptionComponent::PerformDetection()
 		OverlappingActors
 	);
 
+	DetectedActors.Empty();
+	
 	// Detectar nuevos actores
 	for (AActor* Actor : OverlappingActors)
 	{
 		if (Actor->FindComponentByClass<UPerceptionComponent>())
 		{
-			DetectedActors.Add(Actor);
+			DetectedActors.AddUnique(Actor);
 			OnActorPerceptionDetected.Broadcast(Actor);
 		}
 	}
@@ -58,9 +59,13 @@ void UPerceptionComponent::PerformDetection()
 
 void UPerceptionComponent::ActivatePerception(const bool Active)
 {
-	if(!GetWorld()) return;
+	if(!GetWorld())
+	{
+		UE_LOG(LogPerceptionSystem, Error, TEXT("UPerceptionComponent::ActivatePerception - World not loaded"));
+		return;
+	}
 
-	PerceptionActive = Active;
+	bPerceptionActive = Active;
 
 	if(Active)
 	{
@@ -72,12 +77,17 @@ void UPerceptionComponent::ActivatePerception(const bool Active)
 			true
 		);
 
-		UE_LOG(LogPerceptionSystem, Display, TEXT("Perception Component ENABLED"));
+		UE_LOG(LogPerceptionSystem, Display, TEXT("UPerceptionComponent::ActivatePerception - Perception Component ENABLED"));
 
 	}else {
 		GetWorld()->GetTimerManager().ClearTimer(DetectionTimerHandle);
 		OnActorPerceptionDetected.Clear();
 		
-		UE_LOG(LogPerceptionSystem, Display, TEXT("Perception Component DISABLED"));
+		UE_LOG(LogPerceptionSystem, Display, TEXT("UPerceptionComponent::ActivatePerception - Perception Component DISABLED"));
 	}
+}
+
+void UPerceptionComponent::SetPerceptionSettings(const FPerceptionInfo_Struct InPerceptionInfo)
+{
+	PerceptionInfo = InPerceptionInfo;
 }

@@ -5,6 +5,7 @@
 #include "Structs/FPerceptionInfo_Struct.h"
 #include "PerceptionComponent.generated.h"
 
+class UPerceptionSubsystem;
 class USphereComponent;
 
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnActorPerceptionDetected, AActor*, DetectedActor);
@@ -13,6 +14,8 @@ UCLASS(ClassGroup=(Custom), meta=(BlueprintSpawnableComponent))
 class TAREA2_PERCEPCION_API UPerceptionComponent : public USceneComponent
 {
     GENERATED_BODY()
+
+    friend UPerceptionSubsystem;
 
 public:
     UPerceptionComponent();
@@ -23,25 +26,28 @@ protected:
 private:
     FTimerHandle DetectionTimerHandle;
 
+    FPerceptionInfo_Struct PerceptionInfo;
+    
     // Lista de actores detectados
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Perception Info", meta=(AllowPrivateAccess=true))
-    TSet<AActor*> DetectedActors;
+    TArray<AActor*> DetectedActors;
     
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Perception Info", meta=(AllowPrivateAccess=true))
-    bool PerceptionActive;
+    bool bPerceptionActive;
 
     // Comprueba si hay actores en el radio de detección
     void PerformDetection();
 
+    // Métodos públicos
+    UFUNCTION(BlueprintCallable, Category = "Perception Info")
+    void ActivatePerception(const bool Active);
+
 public:
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Perception Settings")
-    FPerceptionInfo_Struct PerceptionInfo;
 
     // Delegado para detecciones
     UPROPERTY(BlueprintAssignable, Category = "Perception Info")
     FOnActorPerceptionDetected OnActorPerceptionDetected;
 
-    // Métodos públicos
-    UFUNCTION(BlueprintCallable, Category = "Perception Info")
-    void ActivatePerception(const bool Active);
+    UFUNCTION(BlueprintCallable, Category = "Perception Settings")
+    void SetPerceptionSettings(FPerceptionInfo_Struct InPerceptionInfo);
 };
