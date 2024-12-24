@@ -1,37 +1,83 @@
 ﻿#include "Components/PerceptionComponent.h"
-
-#include "MovieSceneSequenceID.h"
-#include "Components/SphereComponent.h"
+#include "TimerManager.h"
+#include "Engine/World.h"
+#include "Kismet/KismetSystemLibrary.h"
+#include "Tarea2_Percepcion/Tarea2_Percepcion.h"
 
 UPerceptionComponent::UPerceptionComponent()
 {
-	PrimaryComponentTick.bCanEverTick = true;
-
-	SphereDetection = CreateDefaultSubobject<USphereComponent>(TEXT("Sphere Detection"));
-	SphereDetection->SetHiddenInGame(false);
-	
-	if(PerceptionInfo.DistanceDetection > 0) SphereDetection->SetWorldScale3D(FVector{PerceptionInfo.DistanceDetection});
+	PrimaryComponentTick.bCanEverTick = false;
 }
 
 void UPerceptionComponent::BeginPlay()
 {
 	Super::BeginPlay();
-
-	//SphereDetection->OnComponentBeginOverlap.AddDynamic(this, &UPerceptionComponent::SphereDetectionBeginOverlap);
-	//SphereDetection->OnComponentEndOverlap.AddDynamic(this, &UPerceptionComponent::SphereDetectionEndOverlap);
-
-	FTimerManager& TimerManager = GetWorld()->GetTimerManager();
-	TimerManager.SetTimer(TimerHandle_Perception, this, &ThisClass::CheckActorsInDetectionArea, PerceptionInfo.DetectionInterval, true);
 	
-	GEngine->AddOnScreenDebugMessage(INDEX_NONE, 1.f, FColor::Green, TEXT("Hola"));
+	ActivatePerception(true);	
 }
 
-void UPerceptionComponent::CheckActorsInDetectionArea() const
+void UPerceptionComponent::PerformDetection()
 {
-	GEngine->AddOnScreenDebugMessage(INDEX_NONE, 1.f, FColor::Red, TEXT("Hola"));
-	
-	TArray<AActor*> OverlappingActors;
-	SphereDetection->GetOverlappingActors(OverlappingActors, AActor::StaticClass());
+	if(!PerceptionActive)
+	{
+		UE_LOG(LogPerceptionSystem, Error, TEXT("Perception System is DISABLED"));
+		return;
+	}
 
+	UE_LOG(LogPerceptionSystem, Display, TEXT("Perception Component Detection"));
 	
+	// Obtener actores en el radio de detección
+	TArray<AActor*> OverlappingActors;
+	FVector OwnerLocation = GetOwner()->GetActorLocation();
+
+	// Esfera de detección
+	TArray<TEnumAsByte<EObjectTypeQuery>> ObjectTypes;
+	TArray<AActor*> IgnoredActors;
+	IgnoredActors.Add(GetOwner());
+	
+	UKismetSystemLibrary::SphereOverlapActors(
+		this,
+		OwnerLocation,
+		PerceptionInfo.DistanceDetection,
+		ObjectTypes,
+		nullptr,
+		IgnoredActors,
+		OverlappingActors
+	);
+
+	// Detectar nuevos actores
+	for (AActor* Actor : OverlappingActors)
+	{
+		if (Actor->FindComponentByClass<UPerceptionComponent>())
+		{
+			DetectedActors.Add(Actor);
+			OnActorPerceptionDetected.Broadcast(Actor);
+		}
+	}
+}
+
+void UPerceptionComponent::ActivatePerception(const bool Active)
+{
+	if(!GetWorld()) return;
+
+	PerceptionActive = Active;
+
+	if(Active)
+	{
+		GetWorld()->GetTimerManager().SetTimer(
+			DetectionTimerHandle,
+			this,
+			&UPerceptionComponent::PerformDetection,
+			PerceptionInfo.DetectionInterval,
+			true
+		);
+
+		UE_LOG(LogPerceptionSystem, Display, TEXT("Perception Component ENABLED"));
+
+	}else {
+		GetWorld()->GetTimerManager().ClearTimer(DetectionTimerHandle);
+		OnActorPerceptionDetected.Clear();
+		
+		UE_LOG(LogPerceptionSystem, Display, TEXT("Perception Component DISABLED"));
+	}
 }

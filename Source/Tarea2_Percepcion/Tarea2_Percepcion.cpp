@@ -4,4 +4,5 @@
 #include "Modules/ModuleManager.h"
 
 IMPLEMENT_PRIMARY_GAME_MODULE( FDefaultGameModuleImpl, Tarea2_Percepcion, "Tarea2_Percepcion" );
- 
+
+DEFINE_LOG_CATEGORY(LogPerceptionSystem);

@@ -8,7 +8,5 @@ struct FPerceptionInfo_Struct
 	GENERATED_BODY()
 	
 	UPROPERTY(EditAnywhere) float DistanceDetection = INDEX_NONE;
-	UPROPERTY(EditAnywhere) float DetectionInterval = INDEX_NONE;
-	UPROPERTY(EditAnywhere) float ForgettingTime = INDEX_NONE;
-	
+	UPROPERTY(EditAnywhere) float DetectionInterval = INDEX_NONE;	
 };
