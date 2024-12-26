@@ -30,6 +30,9 @@ public:
 
 	UPROPERTY(BlueprintAssignable, Category = "Perception Subsystem")
 	FOnActorDetectedPerception OnActorDetectedPerception;
+	
+	//UPROPERTY(BlueprintAssignable, Category = "Perception Subsystem")
+	FDelegateHandle OnActorSpawnedDelegateHandle;
 
 private:
 	
@@ -39,6 +42,7 @@ private:
 	// Registrar y desregistrar componentes
 	void RegisterActor(AActor* InActor);
 	void UnregisterActor(AActor* InActor);
+	void RegisterNewActor(AActor* Actor);
 
 	// Callback de inicialización del mundo
 	void OnWorldInitialized(UWorld* World, const UWorld::InitializationValues IVS);

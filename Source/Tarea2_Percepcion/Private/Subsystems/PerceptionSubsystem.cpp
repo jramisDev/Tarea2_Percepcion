@@ -12,7 +12,9 @@ void UPerceptionSubsystem::Initialize(FSubsystemCollectionBase& Collection)
 
 	// Vincular al delegado de inicialización del mundo
 	FWorldDelegates::OnPostWorldInitialization.AddUObject(this, &UPerceptionSubsystem::OnWorldInitialized);
-	//FWorldDelegates::.AddUObject(this, &UPerceptionSubsystem::RegisterActors);	
+	
+	FOnActorSpawned::FDelegate Delegate = FOnActorSpawned::FDelegate::CreateUObject(this, &ThisClass::RegisterNewActor);
+	OnActorSpawnedDelegateHandle = GetWorld()->AddOnActorSpawnedHandler(Delegate);	
 }
 
 void UPerceptionSubsystem::Deinitialize()
@@ -56,11 +58,21 @@ void UPerceptionSubsystem::UnregisterActor(AActor* InActor)
 {
 	if(!InActor)
 	{
-		UE_LOG(LogPerceptionSystem, Error, TEXT("UPerceptionSubsystem::UnregisterActor - Actor empty"));
+		UE_LOG(LogPerceptionSystem, Error, TEXT("UPerceptionSubsystem::UnregisterActor - Actor empty"));		
 		return;
 	}
 	
 	RegisteredActors.Remove(InActor);
+}
+
+void UPerceptionSubsystem::RegisterNewActor(AActor* Actor)
+{
+	if(!Actor)
+	{
+		UE_LOG(LogPerceptionSystem, Error, TEXT("UPerceptionSubsystem::RegisterNewActor - Actor spawned empty"));
+		return;
+	}
+	RegisteredActors.AddUnique(Actor);
 }
 
 void UPerceptionSubsystem::InitPerceptionInfo(AActor* InActor, const FPerceptionInfo_Struct InPerceptionInfo)
